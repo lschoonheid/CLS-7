@@ -1,14 +1,18 @@
+.DS_Store
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
 *$py.class
+*.npy
+*.dat
+*.pkl
 
 # C extensions
 *.so
 
 # Distribution / packaging
 .Python
-.css/
 build/
 develop-eggs/
 dist/
@@ -136,6 +140,7 @@ celerybeat.pid
 *.sage.py
 
 # Environments
+.css/
 .env
 .envrc
 .venv
