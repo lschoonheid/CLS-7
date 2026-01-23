@@ -1,0 +1,3 @@
+[submodule "timeliness_criticality_paper"]
+	path = timeliness_criticality_paper
+	url = https://github.com/jose-moran/timeliness_criticality.git
