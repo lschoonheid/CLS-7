@@ -1,5 +1,5 @@
 import numpy as np
-import scipy
+import numpy.typing as npt
 import matplotlib.pyplot as plt
 from joblib import Parallel, delayed
 import pickle
@@ -15,61 +15,82 @@ from Timeliness_criticality import (
     synthetic_temporal_network_sparsity,  # pyright: ignore[reportAttributeAccessIssue]
 )
 
-if __name__ == "__main__":
-    B = 3
-    K = 5
-    n = 10000
-    T = 10000
-    T_start = 100
 
-    mean_delay_propagation, mean_delays = synthetic_temporal_network(B, K, n, T, T_start)
+# Configuration
+BASELINE_CACHE_FILE = "results.pkl"
+SPARSITY_CACHE_FILE = "sparse_results.pkl"
+LOAD_CACHED_BASELINE_RESULTS = True
+LOAD_CACHED_SPARSITY_RESULTS = True
+K = 5
+N = 10000
+T = 10000
+T_START = 100
+BUFFERS = np.arange(0, 9, 0.05)
+SPARSITIES = [0.9, 0.5, 0.1, 0]
 
-    buffers = np.arange(0, 9, 0.05)
 
-    # Parallelize the simulation to make it faster
-    results: list = Parallel(n_jobs=10)(
+def get_baseline(buffers: npt.NDArray[np.float64], K: int, n: int, T: int, T_start: int) -> list:
+    """Fetch baseline results for different buffer sizes."""
+    return Parallel(n_jobs=10)(
         delayed(synthetic_temporal_network)(buffers[i], K, n, T, T_start)
-        for i in tqdm(range(len(buffers)), desc="Fetching results")
-    )  # pyright: ignore[reportAssignmentType]
-    pickle.dump(results, open("results.pkl", "wb"))
+        for i in tqdm(range(len(buffers)), desc="Fetching baseline results")
+    )  # pyright: ignore[reportReturnType]
 
-    sparsities = [0.9, 0.5, 0.1, 0]
 
+def get_sparsities(
+    buffers: npt.NDArray[np.float64],
+    K: int,
+    n: int,
+    T: int,
+    T_start: int,
+    sparsities: list[float],
+) -> list:
+    """Fetch results for different sparsity levels and buffer sizes."""
     sparse_results = []
     for sparsity in sparsities:
+        # Parallelize the simulation to make it faster
         sparse_results.append(
             Parallel(n_jobs=10)(
                 delayed(synthetic_temporal_network_sparsity)(buffers[i], K, n, T, T_start, sparsity)
-                for i in range(len(buffers))
+                for i in tqdm(range(len(buffers)), desc=f"Fetching sparsity results for sparsity={sparsity}")
             )
         )
+    return sparse_results
 
-    colors = ["blue", "red", "green", "orange"]
+
+def plot(baseline_results: list, sparse_results: list, buffers, sparsities, colors=["blue", "red", "green", "orange"]):
+    assert (
+        len(sparse_results) == len(colors) - 1
+    ), "Number of colors must match number of sparsity levels plus one for baseline"
 
     # Plot
     for i in range(len(buffers)):
-        plt.scatter(buffers[i], np.mean(results[i][0]), color=colors[3], s=10, label=f"Sparsity = {100*sparsities[3]}%")
         plt.scatter(
-            buffers[i],
-            np.mean(sparse_results[2][i][0]),
-            color=colors[2],
-            s=10,
-            label=f"Sparsity = {100*sparsities[2]}%",
+            buffers[i], np.mean(baseline_results[i][0]), color=colors[3], s=10, label=f"Sparsity = {100*sparsities[3]}%"
         )
-        plt.scatter(
-            buffers[i],
-            np.mean(sparse_results[1][i][0]),
-            color=colors[1],
-            s=10,
-            label=f"Sparsity = {100*sparsities[1]}%",
-        )
-        plt.scatter(
-            buffers[i],
-            np.mean(sparse_results[0][i][0]),
-            color=colors[0],
-            s=10,
-            label=f"Sparsity = {100*sparsities[0]}%",
-        )
+        # TODO: try sparsity[-1]
+        for j in range(len(sparsities) - 1):
+            plt.scatter(
+                buffers[i],
+                np.mean(sparse_results[j][i][0]),
+                color=colors[j],
+                s=10,
+                label=f"Sparsity = {100*sparsities[j]}%",
+            )
+        # plt.scatter(
+        #     buffers[i],
+        #     np.mean(sparse_results[1][i][0]),
+        #     color=colors[1],
+        #     s=10,
+        #     label=f"Sparsity = {100*sparsities[1]}%",
+        # )
+        # plt.scatter(
+        #     buffers[i],
+        #     np.mean(sparse_results[0][i][0]),
+        #     color=colors[0],
+        #     s=10,
+        #     label=f"Sparsity = {100*sparsities[0]}%",
+        # )
 
     plt.ylabel(r"$v$")
     plt.xlabel(r"$B$")
@@ -81,4 +102,34 @@ if __name__ == "__main__":
             f"Sparsity = {100*sparsities[0]}%",
         ]
     )
+    plt.grid()
     plt.title(r"Simple $v$ versus $B$ graph, with sparse STNs")
+
+
+if __name__ == "__main__":
+
+    # Load cached results if they exist
+    if LOAD_CACHED_BASELINE_RESULTS:
+        try:
+            results = pickle.load(open(BASELINE_CACHE_FILE, "rb"))
+            print(f"Loaded existing baseline results from {BASELINE_CACHE_FILE}")
+        except FileNotFoundError:
+            print("No existing baseline results found, running simulations...")
+            results: list = get_baseline(BUFFERS, K, N, T, T_START)
+    else:
+        results: list = get_baseline(BUFFERS, K, N, T, T_START)
+    pickle.dump(results, open(BASELINE_CACHE_FILE, "wb"))
+
+    # Load cached sparsity results if they exist
+    if LOAD_CACHED_SPARSITY_RESULTS:
+        try:
+            sparse_results = pickle.load(open(SPARSITY_CACHE_FILE, "rb"))
+            print(f"Loaded existing sparse results from {SPARSITY_CACHE_FILE}")
+        except FileNotFoundError:
+            print("No existing sparse results found, running simulations...")
+            sparse_results: list = get_sparsities(BUFFERS, K, N, T, T_START, SPARSITIES)
+    else:
+        sparse_results: list = get_sparsities(BUFFERS, K, N, T, T_START, SPARSITIES)
+    pickle.dump(sparse_results, open(SPARSITY_CACHE_FILE, "wb"))
+
+    plot(results, sparse_results, BUFFERS, SPARSITIES)
