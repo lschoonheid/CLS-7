@@ -1,6 +1,10 @@
+# For relative import to work, cd to the python_temp_criticality folder before running this script
+
 import numpy as np
 import numpy.typing as npt
 import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+import matplotlib as mpl
 from joblib import Parallel, delayed
 import pickle
 
@@ -9,11 +13,14 @@ import os
 
 from tqdm import tqdm
 
-sys.path.append(os.path.abspath(".."))
-from Timeliness_criticality import (
-    synthetic_temporal_network,  # pyright: ignore[reportAttributeAccessIssue]
-    synthetic_temporal_network_sparsity,  # pyright: ignore[reportAttributeAccessIssue]
-)
+try:
+    sys.path.append(os.path.abspath(".."))
+    from Timeliness_criticality import (
+        synthetic_temporal_network_sparsity,  # pyright: ignore[reportAttributeAccessIssue]
+    )
+except ImportError as e:
+    print("Error importing modules. Make sure to run this script from the 'python_temp_criticality' folder.")
+    exit()
 
 
 # Configuration
@@ -27,14 +34,6 @@ T = 10000
 T_START = 100
 BUFFERS = np.arange(0, 9, 0.05)
 SPARSITIES = [0.9, 0.5, 0.1, 0]
-
-
-def get_baseline(buffers: npt.NDArray[np.float64], K: int, n: int, T: int, T_start: int) -> list:
-    """Fetch baseline results for different buffer sizes."""
-    return Parallel(n_jobs=10)(
-        delayed(synthetic_temporal_network)(buffers[i], K, n, T, T_start)
-        for i in tqdm(range(len(buffers)), desc="Fetching baseline results")
-    )  # pyright: ignore[reportReturnType]
 
 
 def get_sparsities(
@@ -58,68 +57,30 @@ def get_sparsities(
     return sparse_results
 
 
-def plot(baseline_results: list, sparse_results: list, buffers, sparsities, colors=["blue", "red", "green", "orange"]):
-    assert (
-        len(sparse_results) == len(colors) - 1
-    ), "Number of colors must match number of sparsity levels plus one for baseline"
+def plot(sparse_results: list, buffers, sparsities, colormap=cm.Paired):
+    norm = mpl.colors.Normalize(vmin=0, vmax=len(sparsities), clip=True)
+    mapper = cm.ScalarMappable(norm=norm, cmap=colormap)
 
     # Plot
     for i in range(len(buffers)):
-        plt.scatter(
-            buffers[i], np.mean(baseline_results[i][0]), color=colors[3], s=10, label=f"Sparsity = {100*sparsities[3]}%"
-        )
-        # TODO: try sparsity[-1]
-        for j in range(len(sparsities) - 1):
+        for j in range(len(sparsities))[::-1]:
             plt.scatter(
                 buffers[i],
                 np.mean(sparse_results[j][i][0]),
-                color=colors[j],
+                color=mapper.to_rgba(j),
                 s=10,
                 label=f"Sparsity = {100*sparsities[j]}%",
             )
-        # plt.scatter(
-        #     buffers[i],
-        #     np.mean(sparse_results[1][i][0]),
-        #     color=colors[1],
-        #     s=10,
-        #     label=f"Sparsity = {100*sparsities[1]}%",
-        # )
-        # plt.scatter(
-        #     buffers[i],
-        #     np.mean(sparse_results[0][i][0]),
-        #     color=colors[0],
-        #     s=10,
-        #     label=f"Sparsity = {100*sparsities[0]}%",
-        # )
 
     plt.ylabel(r"$v$")
     plt.xlabel(r"$B$")
-    plt.legend(
-        [
-            f"Sparsity = {100*sparsities[3]}%",
-            f"Sparsity = {100*sparsities[2]}%",
-            f"Sparsity = {100*sparsities[1]}%",
-            f"Sparsity = {100*sparsities[0]}%",
-        ]
-    )
+    plt.legend([f"Sparsity = {100*sparsities[i]}%" for i in range(len(sparsities))])
     plt.grid()
     plt.title(r"Simple $v$ versus $B$ graph, with sparse STNs")
+    return plt.show()
 
 
 if __name__ == "__main__":
-
-    # Load cached results if they exist
-    if LOAD_CACHED_BASELINE_RESULTS:
-        try:
-            results = pickle.load(open(BASELINE_CACHE_FILE, "rb"))
-            print(f"Loaded existing baseline results from {BASELINE_CACHE_FILE}")
-        except FileNotFoundError:
-            print("No existing baseline results found, running simulations...")
-            results: list = get_baseline(BUFFERS, K, N, T, T_START)
-    else:
-        results: list = get_baseline(BUFFERS, K, N, T, T_START)
-    pickle.dump(results, open(BASELINE_CACHE_FILE, "wb"))
-
     # Load cached sparsity results if they exist
     if LOAD_CACHED_SPARSITY_RESULTS:
         try:
@@ -132,4 +93,4 @@ if __name__ == "__main__":
         sparse_results: list = get_sparsities(BUFFERS, K, N, T, T_START, SPARSITIES)
     pickle.dump(sparse_results, open(SPARSITY_CACHE_FILE, "wb"))
 
-    plot(results, sparse_results, BUFFERS, SPARSITIES)
+    plot(sparse_results, BUFFERS, SPARSITIES)
