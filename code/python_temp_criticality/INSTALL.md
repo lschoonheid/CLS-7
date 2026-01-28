@@ -15,5 +15,5 @@ brew install hdf5
 ```bash
 python3.11 -m venv .css
 source .css/bin/activate
-pip install -r requirements.txt
+pip install -r code/python_temp_criticality/requirements.txt
 ```
