@@ -33,7 +33,7 @@ N = 10000
 T = 10000
 T_START = 100
 BUFFERS = np.arange(0, 9, 0.05)
-SPARSITIES = [0.9, 0.5, 0.1, 0]
+SPARSITIES = np.linspace(0, 1, 21)
 
 
 def get_sparsities(
@@ -42,11 +42,11 @@ def get_sparsities(
     n: int,
     T: int,
     T_start: int,
-    sparsities: list[float],
+    sparsities: npt.NDArray[np.float64],
 ) -> list:
     """Fetch results for different sparsity levels and buffer sizes."""
     sparse_results = []
-    for sparsity in sparsities:
+    for sparsity in tqdm(sparsities, desc="Sparsity levels"):
         # Parallelize the simulation to make it faster
         sparse_results.append(
             Parallel(n_jobs=10)(
@@ -57,7 +57,12 @@ def get_sparsities(
     return sparse_results
 
 
-def plot(sparse_results: list, buffers, sparsities, colormap=cm.Paired):
+def plot(
+    sparse_results: list,
+    buffers: npt.NDArray[np.float64],
+    sparsities: npt.NDArray[np.float64],
+    colormap=cm.Paired,  # pyright: ignore[reportAttributeAccessIssue]
+):
     norm = mpl.colors.Normalize(vmin=0, vmax=len(sparsities), clip=True)
     mapper = cm.ScalarMappable(norm=norm, cmap=colormap)
 
