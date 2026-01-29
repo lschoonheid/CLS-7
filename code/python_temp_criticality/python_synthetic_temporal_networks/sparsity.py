@@ -32,7 +32,8 @@ K = 5
 N = 10000
 T = 10000
 T_START = 100
-BUFFERS = np.arange(0, 9, 0.05)
+B_C = 3.674
+BUFFERS = np.arange(0, 5, 0.05)
 SPARSITIES = np.linspace(0, 1, 21)
 
 
@@ -66,22 +67,36 @@ def plot(
     norm = mpl.colors.Normalize(vmin=0, vmax=len(sparsities), clip=True)
     mapper = cm.ScalarMappable(norm=norm, cmap=colormap)
 
+    labels = [f"Sparsity = {round(100*(sparsities[i]))}%" for i in range(len(sparsities))]
+
     # Plot
     for i in range(len(buffers)):
-        for j in range(len(sparsities))[::-1]:
+        for j in range(len(sparsities)):
             plt.scatter(
                 buffers[i],
                 np.mean(sparse_results[j][i][0]),
                 color=mapper.to_rgba(j),
                 s=10,
-                label=f"Sparsity = {100*sparsities[j]}%",
+                label=labels[j],
             )
+
+    # Plot critical buffer line
+    plt.axvline(x=B_C, color="k", linestyle="--", label=r"$B^{*}_c$")
+    plt.text(B_C + 0.1, 2, f"$B^{{*}}_c = {B_C}$", rotation=0)
+
+    # Plot critical mean delay line
+    plt.axhline(y=B_C, color="r", linestyle="--", label=f"$v_c = {B_C}$")
+    plt.text(buffers[0] + 0.1, B_C + 0.1, f"$v_{{B=0}} = {B_C}$", rotation=0)
 
     plt.ylabel(r"$v$")
     plt.xlabel(r"$B$")
-    plt.legend([f"Sparsity = {100*sparsities[i]}%" for i in range(len(sparsities))])
+    plt.legend(labels)
+    plt.xlim([buffers[0], buffers[-1]])
+    plt.ylim(bottom=0, top=4)
+    plt.xticks(np.arange(buffers[0], buffers[-1] + 0.5, 0.5))
     plt.grid()
-    plt.title(r"Simple $v$ versus $B$ graph, with sparse STNs")
+    plt.suptitle(r"$v$ versus $B$, Synthetic Temporal Networks")
+    plt.title(f"$N$ = {N}, $K$ = {K}, $T$ = {T}, $T_{{transient}}$ = {T_START}")
     return plt.show()
 
 
