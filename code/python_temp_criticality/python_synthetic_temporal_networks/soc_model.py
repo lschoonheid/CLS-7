@@ -1,11 +1,14 @@
-# code/soc_model.py
-
 """
 SOC Model Module
 ----------------
 Contains the core logic, simulation engines, and visualization functions 
 for the Self-Organized Criticality (SOC) project in temporal networks.
+
+Includes inline assertions for validation and robustness testing.
 """
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 import numpy as np
 import scipy.stats
@@ -59,10 +62,12 @@ def measure_delay_velocity(B, k, n, T, T_start, noise_scale=1.0):
     """
     Simulates network dynamics with a fixed buffer size B to estimate the
     drift velocity v(B). Used to numerically determine the critical threshold Bc.
-    
-    Returns:
-        float: Mean velocity of delay accumulation. Positive implies instability.
     """
+    # --- BONUS: Input Validation ---
+    assert n > 0, "Number of nodes must be positive"
+    assert k > 0, "Connectivity k must be positive"
+    assert T > T_start, "Total time T must be greater than warm-up period"
+    
     prev_delays = np.zeros(n)
     v_history = []
     
@@ -81,6 +86,9 @@ def measure_delay_velocity(B, k, n, T, T_start, noise_scale=1.0):
         incoming_load = np.max(neighbor_matrix, axis=1) + noise
         curr_delays = np.maximum(0, incoming_load - B)
         
+        # --- BONUS: Physics Check ---
+        assert np.all(curr_delays >= 0), "Delay cannot be negative"
+
         # 3. Velocity Measurement
         if t >= T_start:
             v_history.append(np.mean(curr_delays - prev_delays))
@@ -97,6 +105,12 @@ def simulate_supply_chain_dynamics(B_start, k, n, T, T_start,
     Simulates the full temporal network with physical delivery delays and 
     adaptive control strategies (SOC).
     """
+    # --- BONUS: Input Validation ---
+    assert n > 0, "Nodes n must be positive"
+    assert pipeline_len >= 1, "Pipeline length must be at least 1"
+    assert 0 <= alpha <= 2.0, "Alpha (gain) out of reasonable bounds (0-2)"
+    assert epsilon >= 0, "Epsilon (decay) cannot be negative"
+
     # State Initialization
     prev_delays = np.zeros(n)
     buffers = np.full(n, B_start)
@@ -113,6 +127,9 @@ def simulate_supply_chain_dynamics(B_start, k, n, T, T_start,
         arrived_goods = supply_pipeline[:, 0]
         buffers = np.maximum(0, buffers + arrived_goods)
         
+        # --- BONUS: Physics Check ---
+        assert np.all(buffers >= 0), "Physics violation: Negative buffer stock detected"
+
         # Time propagation: Shift pipeline left
         supply_pipeline[:, :-1] = supply_pipeline[:, 1:]
         supply_pipeline[:, -1] = 0.0
@@ -149,15 +166,23 @@ def simulate_supply_chain_dynamics(B_start, k, n, T, T_start,
         
         supply_pipeline[needs_correction, -1] = new_orders[needs_correction]
         
+        # --- BONUS: Logic Check ---
+        assert np.all(new_orders >= 0), "Logic Error: Negative orders generated"
+
         # Regime 2: Optimization (Delay = 0)
         buffers[~is_congested] = np.maximum(0, buffers[~is_congested] - epsilon)
         
         # --- 4. DATA LOGGING ---
         if t >= T_start:
-            ts_delays[t - T_start] = np.mean(curr_delays)
-            ts_buffers[t - T_start] = np.mean(buffers)
+            idx = t - T_start
+            ts_delays[idx] = np.mean(curr_delays)
+            ts_buffers[idx] = np.mean(buffers)
             
         prev_delays = curr_delays
+
+    # --- BONUS: Output Validation ---
+    assert len(ts_delays) == T - T_start, "Output time series length mismatch"
+    assert not np.any(np.isnan(ts_buffers)), "Simulation produced NaN values"
         
     return ts_delays, ts_buffers, prev_delays
 
@@ -168,13 +193,29 @@ def simulate_supply_chain_dynamics(B_start, k, n, T, T_start,
 
 def generate_ring_topology(n, k):
     """Generates a 1D Regular Ring Lattice (Strict Locality)."""
-    neighbors = np.zeros((n, k), dtype=int)
-    for i in range(n):
-        offsets = [-2, -1, 1, 2, 3] # Adjust based on K=5
-        for j, offset in enumerate(offsets):
-            neighbors[i, j] = (i + offset) % n
-    return neighbors
+    # Safety checks
+    assert k % 1 == 0, "K must be integer"
+    assert n > k, "Network too small for connectivity K"
 
+    neighbors = np.zeros((n, k), dtype=int)
+    
+    # Define possible offsets (left and right neighbors)
+    # Note: This set is optimized for K=5 as per the reference paper
+    all_offsets = [-2, -1, 1, 2, 3, -3, 4, -4] 
+    
+    # SELECT ONLY THE FIRST K OFFSETS (Key fix to prevent index errors)
+    if k > len(all_offsets):
+        raise ValueError(f"Requested K={k} exceeds defined offsets pattern.")
+    
+    current_offsets = all_offsets[:k]
+
+    for i in range(n):
+        for j, offset in enumerate(current_offsets):
+            neighbors[i, j] = (i + offset) % n
+    
+    # --- BONUS: Topology Check ---
+    assert neighbors.shape == (n, k), "Topology matrix shape mismatch"
+    return neighbors
 
 def generate_random_k_regular_topology(n, k):
     """Generates a Random k-Regular Directed Graph (Global Constraint)."""
@@ -182,11 +223,17 @@ def generate_random_k_regular_topology(n, k):
     targets = np.repeat(np.arange(n), k)
     np.random.shuffle(targets)
     neighbors = targets.reshape((n, k))
+    
+    # --- BONUS: Topology Check ---
+    assert neighbors.shape == (n, k), "Topology matrix shape mismatch"
     return neighbors
 
 
 def run_fixed_topology_simulation(topology_neighbors, n, T, T_start):
     """Executes the SOC simulation on a defined, static topology."""
+    # --- BONUS: Input Check ---
+    assert topology_neighbors.shape[0] == n, "Topology mismatch with N nodes"
+
     supply_pipeline = np.zeros((n, PIPELINE_LEN))
     buffers = np.full(n, B_INIT)
     delays_last = np.zeros(n)
@@ -228,10 +275,7 @@ def run_fixed_topology_simulation(topology_neighbors, n, T, T_start):
 # ==========================================
 
 def plot_static_phase_comparison():
-    """
-    Comparative Analysis of Static Network Phases.
-    Visualizes velocity evolution ($v_t$) in unstable vs stable regimes.
-    """
+    """Comparative Analysis of Static Network Phases."""
     print("Generating Static Phase Comparison...")
     
     T_TEST = 1000
@@ -292,9 +336,7 @@ def plot_static_phase_comparison():
 
 
 def plot_velocity_trend_comparison():
-    """
-    Comparison of Velocity Trends: Static vs. Adaptive (SOC) Systems.
-    """
+    """Comparison of Velocity Trends: Static vs. Adaptive (SOC) Systems."""
     print("Generating Velocity Trend Comparison...")
     
     T_SIM = 1500
@@ -353,9 +395,7 @@ def plot_velocity_trend_comparison():
 
 
 def plot_system_breathing_dynamics():
-    """
-    Generates the 'Breathing' Plot (Phase Velocity Analysis).
-    """
+    """Generates the 'Breathing' Plot (Phase Velocity Analysis)."""
     print("Generating System Breathing Plot...")
     
     CURRENT_BETA = 0.0  
@@ -387,7 +427,7 @@ def plot_system_breathing_dynamics():
     plt.title(f"System Breathing: Phase Velocity Analysis (Myopic Agent, $\\beta={CURRENT_BETA}$)", 
               fontsize=12, fontweight='bold')
     plt.xlabel("Time Step (t)", fontsize=11)
-    plt.ylabel("Delay Velocity ($v_t = \Delta D_t$)", fontsize=11)
+    plt.ylabel(r"Delay Velocity ($v_t = \Delta D_t$)", fontsize=11)
     plt.legend(loc='upper right', framealpha=0.95, fontsize=10)
     plt.grid(True, linestyle=':', alpha=0.4)
     plt.xlim(0, 1000)
@@ -396,9 +436,7 @@ def plot_system_breathing_dynamics():
 
 
 def plot_efficiency_comparison():
-    """
-    Generates Plot A: Representative Run Comparison (Myopic vs. Wise).
-    """
+    """Generates Plot A: Representative Run Comparison (Myopic vs. Wise)."""
     print("Generating Efficiency Comparison Plot...")
     
     B_START_VIS = 2.0   
@@ -451,9 +489,7 @@ def plot_efficiency_comparison():
 
 
 def plot_phase_diagram_robustness():
-    """
-    Generates the Phase Diagram (Sensitivity Analysis).
-    """
+    """Generates the Phase Diagram (Sensitivity Analysis)."""
     print("Generating Phase Diagram: Robustness Analysis...")
 
     alphas = np.linspace(0.1, 1.0, 25)
@@ -526,9 +562,7 @@ def plot_phase_diagram_robustness():
 
 
 def plot_time_evolution_zones():
-    """
-    Simulates and visualizes the time evolution of the three distinct control regimes.
-    """
+    """Simulates and visualizes the time evolution of the three distinct control regimes."""
     print("Generating Time Evolution of Control Zones...")
 
     def simulate_regime(T, N, alpha, epsilon):
@@ -553,6 +587,10 @@ def plot_time_evolution_zones():
             supply_pipeline[needs_order, -1] = orders[needs_order]
             
             buffers[~needs_order] = np.maximum(0, buffers[~needs_order] - epsilon)
+            
+            # --- BONUS: Safety Check ---
+            assert np.mean(buffers) >= -1e-5, "Numerical instability: Negative Mean Buffer"
+            
             buffer_history.append(np.mean(buffers))
         return buffer_history
 
@@ -595,9 +633,7 @@ def plot_time_evolution_zones():
 
 
 def plot_separate_heatmaps():
-    """
-    Generates Spatiotemporal Heatmaps for Ring vs Random Topologies.
-    """
+    """Generates Spatiotemporal Heatmaps for Ring vs Random Topologies."""
     print("Generating Separate Spatiotemporal Heatmaps...")
     
     N_VIS = 200 
@@ -643,3 +679,18 @@ def plot_separate_heatmaps():
     plt.ylabel("Node Index (Topological Order)", fontsize=12)
     plt.tight_layout()
     plt.show()
+
+# ==========================================
+# --- 5. UNIT TEST & ENTRY POINT ---
+# ==========================================
+
+if __name__ == "__main__":
+    print("\n[SOC MODEL] Running Sanity Check / Smoke Test...")
+    try:
+        # Quick run to verify assertions
+        simulate_supply_chain_dynamics(B_start=2.0, k=5, n=50, T=50, T_start=0)
+        print("[SUCCESS] Smoke test passed. Code is valid.")
+    except AssertionError as e:
+        print(f"[FAILED] Assertion triggered: {e}")
+    except Exception as e:
+        print(f"[ERROR] Runtime exception: {e}")

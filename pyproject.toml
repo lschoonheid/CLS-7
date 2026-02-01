@@ -1,17 +1,31 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "cls-7"
 version = "0.1.0"
-description = "Add your description here"
+description = "Complex System Simulation - Team 7"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.11"
 dependencies = [
-    "ipykernel>=7.1.0",
-    "joblib>=1.5.3",
-    "matplotlib>=3.10.8",
-    "notebook>=7.5.2",
-    "numba>=0.63.1",
-    "numpy==2.3.*",
-    "pandas>=2.3.3",
-    "scipy>=1.17.0",
-    "tqdm>=4.67.1",
+    "numpy>=1.23.4",
+    "matplotlib>=3.6.2",
+    "scipy>=1.9.3",
+    "pandas>=1.5.1",
+    "networkx>=2.8.8",
+    "scikit-learn>=1.2.0",
+    "statsmodels>=0.13.5",
+    "numba",
+    "joblib>=1.2.0",
+    "tqdm>=4.64.1",
+    "python-louvain>=0.16",
+    "teneto>=0.5.3",
+    "ipykernel>=6.17.1",
+    "pytest>=8.0.0",
 ]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["code*", "theory*"]
+namespaces = false
