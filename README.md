@@ -22,12 +22,7 @@ In the papaer is presented the possibility of modeling the noise with a heavier 
 
 # Self-organized Criticality (SOC) exploration
 
-We implemented a Self-Organized Criticality (SOC) model applied to temporal networks, modifying the original logic to use purely local update rules.
-
-The work done in the [SOC_CriticalityMatteo.ipynb](code/python_temp_criticality/python_synthetic_temporal_networks/SOC_CriticalityMatteo.ipynb) notebook includes:
-
-1) Implementation of the model starting from a Mean Field approximation.
-
-2) Statistical analysis of the system dynamics, specifically focusing on measuring delays and buffer sizes.
-
-3) Final verification of the critical behavior on networks with a fixed spatial structure.
+We investigated the emergence of Self-Organized Criticality (SOC) in supply chain networks by implementing a model driven strictly by local update rules. The simulation module is found in [soc_model.py](code/python_temp_criticality/python_synthetic_temporal_networks/soc_model.py) and the analysis in [SOC_Analysis.ipynb](code/python_temp_criticality/python_synthetic_temporal_networks/SOC_Analysis.ipynb). This exploration covers:
+1. The implementation of adaptive agents that self-tune buffer sizes to reach a "Goldilocks Zone" of stability.
+2. A comparative analysis of **Reactive** (Pipeline-Agnostic) versus **Compensatory** (Pipeline-Aware) control strategies to quantify their impact on delay-induced oscillations (Bullwhip Effect).
+3. A topological comparison between Random Regular Graphs and Ring Lattices to confirm robust critical behavior.
