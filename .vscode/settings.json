@@ -1,0 +1,6 @@
+{
+  "python.analysis.extraPaths": [
+    "./timeliness_criticality_paper/python_temp_criticality/python_real_world_networks",
+    "./timeliness_criticality_paper/python_temp_criticality/python_synthetic_temporal_networks"
+  ]
+}
