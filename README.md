@@ -6,9 +6,9 @@ This repository contains the code for the Simulating Complex Systems Group 7 pro
 For installation instructions of the python code refer to [INSTALL.md](INSTALL.md)
 
 # Recreation
-The analytical_validation notebook takes five hypotheses from the analytical mean field theory and tests them via simulation. Multiple trials are used as well as bootstrapping to ensure robust error estimates and accurate hypothesis tests. 
+The theory folder contains a notebook and module files all written in python. The notebook runs simulations that test the analytical solutions of the mean-field thery through simulation. Hypothesis tests are used where suitable as well as ensembles for robustness. 
 
-The details can be found as markdown descriptions in the notebook itself.
+The notebook timeliness_criticality_simulation_logic contains details and explanations on the Hypothesis and the analytical theory being tested. 
 
 # Sparsity exploration
 Different levels of sparsity in synthetic temporal networks (STNs) were evaluated to observe second order phase transition behavior. See [sparsity.py](code/python_temp_criticality/python_synthetic_temporal_networks/sparsity.py) for code to recreate the sparsity exploration. Make sure to cd to the [python_synthetic_temporal_networks](code/python_temp_criticality/python_synthetic_temporal_networks) folder before running this script.
