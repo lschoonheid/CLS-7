@@ -1,6 +1,6 @@
 # Simulating Complex Systems Group 7 - Timeliness Criticality
 
-This repository contains the code for the Simulating Complex Systems Group 7 project focused on Timeliness Criticality, based on the paper https://arxiv.org/abs/2309.15070 and using the respective code from [their repository](https://github.com/jose-moran/timeliness_criticality). 
+This repository contains the code for the Simulating Complex Systems Group 7 project focused on Timeliness Criticality, based on the paper https://arxiv.org/abs/2309.15070 and using the parts of the respective code from [their repository](https://github.com/jose-moran/timeliness_criticality). 
 
 
 For installation instructions of the python code refer to [INSTALL.md](INSTALL.md)
