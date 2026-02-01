@@ -29,6 +29,28 @@ Result = Tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]
 
 
 def get_thiers13(do_cache=LOAD_CACHED_RESULTS) -> pd.DataFrame:
+    """
+    Load and process the Thiers13 high school proximity network dataset.
+    This function loads temporal network data from the HighSchool2013 proximity network dataset,
+    preprocesses it by remapping node IDs and timestamps to sequential integers, and creates a
+    DelayBufferNetwork object from the processed data.
+    Args:
+        do_cache (bool, optional): Whether to cache the processed network data to disk.
+            Defaults to LOAD_CACHED_RESULTS.
+    Returns:
+        pd.DataFrame: A DelayBufferNetwork object containing the processed temporal network data
+            with columns ['t', 'i', 'j', 'weight', 'event_id'].
+    Notes:
+        - If LOAD_CACHED_RESULTS is True, attempts to load cached data from "Thiers13.npy"
+        - Node IDs (i, j) are remapped to sequential integers starting from 0
+        - Timestamps (t) are remapped to sequential integers starting from 0
+        - All edge weights are set to 0.5
+        - Each event is assigned an event_id based on its timestamp
+        - If do_cache is True, saves the processed network as "1_Thiers13" event arrays and dict
+    Raises:
+        FileNotFoundError: If the source CSV file is not found and no cached .npy file exists
+    """
+
     if LOAD_CACHED_RESULTS:
         # Save to .npy
         try:
@@ -70,6 +92,32 @@ def get_thiers13(do_cache=LOAD_CACHED_RESULTS) -> pd.DataFrame:
 
 
 def get_workplace15(do_cache=LOAD_CACHED_RESULTS) -> pd.DataFrame:
+    """
+    Load and process the Workplace15 temporal network dataset.
+
+    This function reads the InVS workplace contact network data, processes it into a
+    DelayBufferNetwork object, and optionally caches the results for faster future access.
+
+    Args:
+        do_cache (bool, optional): Whether to save processed network data to disk for
+            future use. Defaults to LOAD_CACHED_RESULTS.
+
+    Returns:
+        pd.DataFrame: A DelayBufferNetwork object containing the processed temporal
+            network with remapped node IDs and timestamps. Each contact event has:
+            - i: source node (remapped to sequential integers)
+            - j: target node (remapped to sequential integers)
+            - t: timestamp (remapped to sequential integers)
+            - weight: constant weight of 0.5
+            - event_id: integer timestamp value
+
+    Notes:
+        - The function attempts to load cached .npy data if LOAD_CACHED_RESULTS is True
+        - Original node IDs and timestamps are remapped to sequential integers starting from 0
+        - If do_cache is True, the processed network is saved as "1_Workplace15"
+        - The network is created with uniform_time_range=True and dont_build_df=True options
+    """
+
     if LOAD_CACHED_RESULTS:
         # Save to .npy
         try:
@@ -106,6 +154,27 @@ def get_workplace15(do_cache=LOAD_CACHED_RESULTS) -> pd.DataFrame:
 
 
 def sim(b, path: str) -> Result:
+    """
+    Simulate event propagation through a delay buffer network.
+    This function creates a DelayBufferNetwork from a saved file, adds exponential delays
+    and uniform event buffers, processes the delays without topology interaction, and 
+    returns the resulting delay statistics.
+    Args:
+        b: Buffer size for the event buffer. Used to set uniform buffer capacity.
+        path (str): File path to load the saved DelayBufferNetwork from.
+    Returns:
+        Result: A tuple containing:
+            - event_delays: Array of current delays for each event
+            - agent_delays: Mean delays per agent (averaged across axis 1)
+    Note:
+        - The network is instantiated inside the function to prevent memory issues 
+          during parallelization
+        - Uses exponential delay distribution with tau=1
+        - Buffers are uniformly distributed
+        - Both delays and buffers use event dictionary representation
+        - Delay processing does not interact with network topology
+    """
+
     # Build the DelayBufferNetwork inside the function to avoid memory issues with parallelization
     dbn = DelayBufferNetwork(load=True, path=path)
     dbn.add_delay(expon_distr_bool=True, tau=1, using_event_dict=True)
@@ -117,6 +186,29 @@ def sim(b, path: str) -> Result:
 
 
 def plot(delays_prop: List[npt.NDArray[np.float64]], title: str):
+    """
+    Plot the mean proportion of delays as a function of buffer sizes.
+    Parameters
+    ----------
+    delays_prop : List[npt.NDArray[np.float64]]
+        A list of arrays containing delay proportions for each buffer size.
+        Each array corresponds to one buffer size configuration.
+    title : str
+        The title/label to be displayed in the plot legend.
+    Notes
+    -----
+    This function creates a scatter plot showing the relationship between buffer sizes
+    and mean delay proportions. It assumes a global variable 'buffers' exists containing
+    the buffer size values to plot on the x-axis.
+    The plot displays:
+    - X-axis: Buffer sizes (B)
+    - Y-axis: Mean delay proportion (v)
+    - Red scatter points for each buffer size
+    - Grid for easier reading
+    """
+    
+
+
     for i, b in enumerate(buffers):
         plt.scatter(b, np.mean(delays_prop[i]), c="r")
 

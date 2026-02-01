@@ -45,7 +45,27 @@ def get_sparsities(
     T_start: int,
     sparsities: npt.NDArray[np.float64],
 ) -> list:
-    """Fetch results for different sparsity levels and buffer sizes."""
+    """
+    Calculate metrics for synthetic temporal networks across different parameter combinations.
+    This function runs parallel simulations of synthetic temporal networks with varying
+    sparsity levels and buffer sizes, collecting results for analysis.
+    Args:
+        buffers (npt.NDArray[np.float64]): Array of buffer size values to test.
+        K (int): Number of connections or degree parameter for the network.
+        n (int): Number of nodes in the network.
+        T (int): Total time steps for the simulation.
+        T_start (int): Starting time step for measurements.
+        sparsities (npt.NDArray[np.float64]): Array of sparsity values to test.
+    Returns:
+        list: A nested list of results where each element corresponds to a sparsity level,
+            containing results for all buffer sizes at that sparsity level. The structure
+            is: [[results for buffer_1, ..., buffer_n] at sparsity_1, ...].
+    Notes:
+        - Uses parallel processing with 10 workers to speed up computation.
+        - Progress bars are displayed for both sparsity levels and buffer iterations.
+        - Requires the `synthetic_temporal_network_sparsity` function to be defined.
+    """
+
     sparse_results = []
     for sparsity in tqdm(sparsities, desc="Sparsity levels"):
         # Parallelize the simulation to make it faster
@@ -64,6 +84,36 @@ def plot(
     sparsities: npt.NDArray[np.float64],
     colormap=cm.Paired,  # pyright: ignore[reportAttributeAccessIssue]
 ):
+    """
+    Plot mean delay versus buffer size for different network sparsity levels.
+    This function creates a scatter plot showing the relationship between buffer size (B)
+    and mean delay (v) for various network sparsity values. It includes reference lines
+    for the critical buffer size and critical mean delay.
+    Parameters
+    ----------
+    sparse_results : list
+        A nested list containing simulation results for different sparsity levels and buffers.
+        Structure: sparse_results[sparsity_idx][buffer_idx][0] contains delay measurements.
+    buffers : npt.NDArray[np.float64]
+        Array of buffer sizes to plot on the x-axis.
+    sparsities : npt.NDArray[np.float64]
+        Array of sparsity values (between 0 and 1) used in the simulations.
+    colormap : matplotlib colormap, optional
+        Colormap to use for differentiating sparsity levels. Default is cm.Paired.
+    Returns
+    -------
+    matplotlib display object
+        The result of plt.show(), displaying the generated plot.
+    Notes
+    -----
+    - Uses global variables B_C (critical buffer), N, K, T, and T_START for annotations
+      and title.
+    - The plot includes a vertical dashed line at the critical buffer size (B_C).
+    - A horizontal dashed line indicates the critical mean delay.
+    - Each sparsity level is represented by a different color according to the colormap.
+    - The y-axis is limited to [0, 4] and x-axis spans the provided buffer range.
+    """
+
     norm = mpl.colors.Normalize(vmin=0, vmax=len(sparsities), clip=True)
     mapper = cm.ScalarMappable(norm=norm, cmap=colormap)
 
