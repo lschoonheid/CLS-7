@@ -51,4 +51,33 @@ By assigning the AI a specific role (e.g., "Senior Python Engineer" or "Complex 
 
 #### 5. Effectiveness & Limitations
 * **Effectiveness:** The AI was highly effective at **syntax generation** and **library management**, significantly reducing the time spent on boilerplate code and formatting (PEP-8).
-* **Limitations:** The AI demonstrated poor "contextual awareness" regarding specific scientific constraints. It repeatedly defaulted to global/synchronous updates (easier to code) rather than the required local/asynchronous rules. 
+* **Limitations:** The AI demonstrated poor "contextual awareness" regarding specific scientific constraints. It repeatedly defaulted to global/synchronous updates (easier to code) rather than the required local/asynchronous rules.
+
+
+-----------
+
+## Finlay Schlieper
+
+## Claude
+
+Claude Opus 4.5 was used to polish and refactor a provided notebook that had been worked and iterated on and before. The ‘Prompting best practices - Claude API Docs’ advice from the Anthropic Website was used to structure the prompt. Both the relevant sections of the paper as well as the grading rubric were attached to ensure a clear goal.
+
+### Prompt
+> Act as an expert computational scientist and professor of complex systems specializing in timeliness criticality. Your objective is to refactor the attached Jupyter notebook to validate the five hypotheses proposed in the provided paper, strictly adhering to the attached grading rubric to maximize the score. You must validate these hypotheses by comparing simulation data against the theoretical predictions using rigorous statistical methods; specifically, implement ensemble averaging to generate 95% confidence intervals and perform appropriate hypothesis testing (e.g., Student's t-test or Kolmogorov-Smirnov) to quantify the alignment between theory and simulation. Refactor the code for computational efficiency and readability according to PEP 8 standards, removing redundant functions and ensuring modularity. Simultaneously, enhance the narrative flow by rewriting the Markdown cells. Default to immediate implementation: do not merely suggest changes, but return the fully executed, polished notebook content with high-quality visualization and clear, scannable headers that guide the reader through the validation logic.
+
+**Output:**
+Refactored notebook of roughly the length of the final version.
+
+### Prompt (notebook and style guide attached)
+> You are an expert programmer. Attached you will find refactoring instructions i.e. a .py modules folder, docstrings etc. Return the core logic notebook and the modules file and make sure results are saved to the results folder/which should be created if it doesn’t exist. Return the whole folder and make sure the output is identical to the original attached notebook. Do not make any other changes. This is a pure refactoring.
+
+**Output:**
+Refactored Folder containing logic notebook, an `init`, `theory`, `simulation`, `analysis` and `ensemble.py` files.
+
+## Co-Pilot (Gemini 3.0 and Opus 4.5)
+
+The original notebook was developed in small steps with the help of Copilot. It provided debugging assistance and commenting/docstrings/polishing and parallelisation inspiration.
+
+## Experience
+
+The AI was very useful. Its ability when given small chunks of the right context with clear instructions was excellent. Fresh chats were used as often as possible as performance broke down very quickly. I found it most useful as an executor rather than an ideator, apart from during the parallelisation where it came up with some clever optimisation structures.
