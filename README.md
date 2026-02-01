@@ -18,6 +18,7 @@ Different levels of sparsity in synthetic temporal networks (STNs) were evaluate
 Real-world temporal networks were explored as suggested by the original paper and heavily inspired by their code. See [real_world_networks.py](code/python_temp_criticality/python_real_world_networks/real_world_networks.py) for code to recreate the real-world networks exploration. Make sure to cd to the [python_real_world_networks](code/python_temp_criticality/python_real_world_networks) folder before running this script and to download the required datasets as mentioned in [INSTALL.md](INSTALL.md).
 
 # Heavy-tailedness exploration
+In the papaer is presented the possibility of modeling the noise with a heavier tailed distributuion. Check [meanfield_simulation.py](/theory/meanfield_simulation.py) for the code implementation. It can be used with any scipy.stats distribution. This module is for exploratory analysis only and should be used with a restricted number of simulations as it is not as efficient as the code present in [ensemble.py](/theory/ensemble.py).
 
 # Self-organized Criticality (SOC) exploration
 

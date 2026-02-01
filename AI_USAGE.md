@@ -5,3 +5,4 @@
 
 # Claude App
 * Debug package dependency issues
+* Create doc strings for functions
