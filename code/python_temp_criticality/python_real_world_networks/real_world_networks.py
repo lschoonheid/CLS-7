@@ -28,7 +28,7 @@ LOAD_CACHED_RESULTS = True
 Result = Tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]
 
 
-def get_thiers13(do_cache=LOAD_CACHED_RESULTS) -> pd.DataFrame:
+def get_thiers13(do_cache=LOAD_CACHED_RESULTS) -> DelayBufferNetwork:
     """
     Load and process the Thiers13 high school proximity network dataset.
     This function loads temporal network data from the HighSchool2013 proximity network dataset,
@@ -91,7 +91,7 @@ def get_thiers13(do_cache=LOAD_CACHED_RESULTS) -> pd.DataFrame:
     return dbn
 
 
-def get_workplace15(do_cache=LOAD_CACHED_RESULTS) -> pd.DataFrame:
+def get_workplace15(do_cache=LOAD_CACHED_RESULTS) -> DelayBufferNetwork:
     """
     Load and process the Workplace15 temporal network dataset.
 
@@ -157,7 +157,7 @@ def sim(b, path: str) -> Result:
     """
     Simulate event propagation through a delay buffer network.
     This function creates a DelayBufferNetwork from a saved file, adds exponential delays
-    and uniform event buffers, processes the delays without topology interaction, and 
+    and uniform event buffers, processes the delays without topology interaction, and
     returns the resulting delay statistics.
     Args:
         b: Buffer size for the event buffer. Used to set uniform buffer capacity.
@@ -167,7 +167,7 @@ def sim(b, path: str) -> Result:
             - event_delays: Array of current delays for each event
             - agent_delays: Mean delays per agent (averaged across axis 1)
     Note:
-        - The network is instantiated inside the function to prevent memory issues 
+        - The network is instantiated inside the function to prevent memory issues
           during parallelization
         - Uses exponential delay distribution with tau=1
         - Buffers are uniformly distributed
@@ -206,8 +206,6 @@ def plot(delays_prop: List[npt.NDArray[np.float64]], title: str):
     - Red scatter points for each buffer size
     - Grid for easier reading
     """
-    
-
 
     for i, b in enumerate(buffers):
         plt.scatter(b, np.mean(delays_prop[i]), c="r")
