@@ -67,6 +67,11 @@ from .ensemble import (
     SEED_BASE
 )
 
+from .meanfield_simulation import (
+    meanfield_simulation,
+    get_order_parameter
+)
+
 __version__ = "1.0.0"
 __author__ = "Computational Validation Study"
 
@@ -82,6 +87,8 @@ __all__ = [
     'measure_velocity',
     'measure_alpha',
     'run_single_simulation',
+    'meanfield_simulation',
+    'get_order_parameter',
     # Analysis
     'estimate_Bc_constrained',
     'estimate_Bc_free',
