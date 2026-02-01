@@ -26,3 +26,6 @@ We investigated the emergence of Self-Organized Criticality (SOC) in supply chai
 1. The implementation of adaptive agents that self-tune buffer sizes to reach a "Goldilocks Zone" of stability.
 2. A comparative analysis of **Reactive** (Pipeline-Agnostic) versus **Compensatory** (Pipeline-Aware) control strategies to quantify their impact on delay-induced oscillations (Bullwhip Effect).
 3. A topological comparison between Random Regular Graphs and Ring Lattices to confirm robust critical behavior.
+
+**Bonus**: The SOC module includes detailed docstrings, inline `assert` statements for physical consistency (e.g., non-negative stocks), and a dedicated test suite. You can run the automated tests via:
+`pytest code/python_temp_criticality/python_synthetic_temporal_networks/soc_tests.py`
